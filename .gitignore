@@ -1,3 +1,66 @@
+# General
+.DS_Store
+*.log
+*.swp
+*.swo
+
+# Dart / Flutter
+.dart_tool/
+.packages
+.flutter-plugins
+.flutter-plugins-dependencies
+.metadata
+.pub-cache/
+.pub/
+
+# Build outputs
+build/
+
+# IDE
+.idea/
+*.iml
+*.ipr
+*.iws
+.vscode/
+
+# Android
+android/.gradle/
+android/**/captures/
+android/**/*.iml
+android/local.properties
+android/app/.cxx/
+
+# Android keystores and signing
+**/key.properties
+**/*.keystore
+**/*.jks
+
+# iOS
+ios/Flutter/.last_build_id
+ios/Flutter/flutter_export_environment.sh
+ios/Flutter/ephemeral/
+ios/Pods/
+ios/.generated/
+
+# Xcode user data
+**/*.xcuserdata/
+**/*.xcuserstate
+
+# macOS
+macos/Flutter/ephemeral/
+macos/Pods/
+
+# Linux
+linux/flutter/ephemeral/
+
+# Windows
+windows/runner/Debug/
+windows/runner/Release/
+windows/runner/x64/
+windows/runner/x86/
+
+# Web (usually nothing special beyond build/)
+
 # Miscellaneous
 *.class
 *.log

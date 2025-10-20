@@ -39,6 +39,7 @@ class _MyHomePageState extends State<MyHomePage> {
   String? _currentSong;
   BluetoothDevice? _connectedDevice;
   BluetoothCharacteristic? _writeCharacteristic;
+  BluetoothCharacteristic? _navigationCharacteristic;
   String _connectionStatus = "🔄 Searching for device...";
   String track = "No track";
 
@@ -78,6 +79,24 @@ class _MyHomePageState extends State<MyHomePage> {
           _currentSong = track;
         });
         _sendTrackName(track);
+      }
+
+      // Google Maps navigation notifications → forward to navigation characteristic
+      final String? pkg = event.packageName;
+      final bool isGoogleMaps = pkg == 'com.google.android.apps.maps' ||
+          pkg == 'com.google.android.apps.mapslite' ||
+          (pkg?.contains('com.google.android.apps.maps') == true);
+      if (isGoogleMaps) {
+        final String title = (event.title ?? '').trim();
+        final String content = (event.content ?? '').trim();
+        final String navigationText = [title, content]
+            .where((s) => s.isNotEmpty)
+            .join(' - ')
+            .replaceAll(RegExp(r'[ⓘ️]'), '')
+            .trim();
+        if (navigationText.isNotEmpty) {
+          _sendNavigation(navigationText);
+        }
       }
     });
   }
@@ -130,7 +149,9 @@ class _MyHomePageState extends State<MyHomePage> {
           if (characteristic.uuid == characteristicUuidSong) {
             _writeCharacteristic = characteristic;
             debugPrint("Characteristic found: ${characteristic.uuid}");
-            break;
+          } else if (characteristic.uuid == characteristicUuidNavigation) {
+            _navigationCharacteristic = characteristic;
+            debugPrint("Navigation characteristic found: ${characteristic.uuid}");
           }
         }
       }
@@ -143,6 +164,15 @@ class _MyHomePageState extends State<MyHomePage> {
       List<int> bytes = utf8.encode(trackName);
       await _writeCharacteristic!.write(bytes);
       debugPrint("Sent track: $trackName");
+    }
+  }
+
+  /// Send navigation text via BLE to navigation characteristic
+  Future<void> _sendNavigation(String navigationText) async {
+    if (_navigationCharacteristic != null) {
+      final List<int> bytes = utf8.encode(navigationText);
+      await _navigationCharacteristic!.write(bytes);
+      debugPrint("Sent navigation: $navigationText");
     }
   }
 
