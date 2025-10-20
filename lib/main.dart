@@ -3,9 +3,10 @@ import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 import 'package:notification_listener_service/notification_listener_service.dart';
 import 'dart:convert';
 
-const String deviceName = "Multimedia";
+const String deviceName = "SuperVESCDisplay";
 final Guid serviceUuid = Guid("55c1ef40-6155-47cf-929a-c994c915ca22");
-final Guid characteristicUuid = Guid("55c1ef41-6155-47cf-929a-c994c915ca22");
+final Guid characteristicUuidSong = Guid("55c1ef41-6155-47cf-929a-c994c915ca22");
+final Guid characteristicUuidNavigation = Guid("55c1ef42-6155-47cf-929a-c994c915ca22");
 
 void main() {
   runApp(const MyApp());
@@ -126,7 +127,7 @@ class _MyHomePageState extends State<MyHomePage> {
     for (BluetoothService service in services) {
       if (service.uuid == serviceUuid) {
         for (BluetoothCharacteristic characteristic in service.characteristics) {
-          if (characteristic.uuid == characteristicUuid) {
+          if (characteristic.uuid == characteristicUuidSong) {
             _writeCharacteristic = characteristic;
             debugPrint("Characteristic found: ${characteristic.uuid}");
             break;

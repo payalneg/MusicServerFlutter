@@ -1,0 +1,20 @@
+{
+  "buildFiles": [
+    "/Users/alexey/flutter/packages/flutter_tools/gradle/src/main/groovy/CMakeLists.txt"
+  ],
+  "cleanCommandsComponents": [
+    [
+      "/Users/alexey/Library/Android/sdk/cmake/3.22.1/bin/ninja",
+      "-C",
+      "/Users/alexey/work/my/MusicServerFlutter/android/app/.cxx/Debug/27566h60/x86",
+      "clean"
+    ]
+  ],
+  "buildTargetsCommandComponents": [
+    "/Users/alexey/Library/Android/sdk/cmake/3.22.1/bin/ninja",
+    "-C",
+    "/Users/alexey/work/my/MusicServerFlutter/android/app/.cxx/Debug/27566h60/x86",
+    "{LIST_OF_TARGETS_TO_BUILD}"
+  ],
+  "libraries": {}
+}

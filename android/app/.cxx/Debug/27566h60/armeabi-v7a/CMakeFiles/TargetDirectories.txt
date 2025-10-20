@@ -1,0 +1,2 @@
+/Users/alexey/work/my/MusicServerFlutter/android/app/.cxx/Debug/27566h60/armeabi-v7a/CMakeFiles/edit_cache.dir
+/Users/alexey/work/my/MusicServerFlutter/android/app/.cxx/Debug/27566h60/armeabi-v7a/CMakeFiles/rebuild_cache.dir
