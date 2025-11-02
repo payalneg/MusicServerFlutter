@@ -10,6 +10,7 @@ const String deviceName = "SuperVESCDisplay";
 final Guid serviceUuid = Guid("55c1ef40-6155-47cf-929a-c994c915ca22");
 final Guid characteristicUuidSong = Guid("55c1ef41-6155-47cf-929a-c994c915ca22");
 final Guid characteristicUuidNavigation = Guid("55c1ef42-6155-47cf-929a-c994c915ca22");
+final Guid characteristicUuidIcon = Guid("55c1ef43-6155-47cf-929a-c994c915ca22");
 
 // Icon display size
 const int iconDisplaySize = 60;
@@ -54,6 +55,7 @@ class _MyHomePageState extends State<MyHomePage> {
   BluetoothDevice? _connectedDevice;
   BluetoothCharacteristic? _writeCharacteristic;
   BluetoothCharacteristic? _navigationCharacteristic;
+  BluetoothCharacteristic? _iconCharacteristic;
   String _connectionStatus = "🔄 Searching for device...";
   String track = "No track";
 
@@ -150,6 +152,14 @@ class _MyHomePageState extends State<MyHomePage> {
 
           try {
             await r.device.connect();
+
+            // Request maximum MTU for better data transfer
+            try {
+              final negotiatedMtu = await r.device.requestMtu(512);
+              debugPrint("Negotiated MTU: $negotiatedMtu");
+            } catch (e) {
+              debugPrint("MTU negotiation failed: $e");
+            }
           } catch (e) {
             debugPrint("Ошибка подключения: $e");
             continue;
@@ -180,6 +190,9 @@ class _MyHomePageState extends State<MyHomePage> {
           } else if (characteristic.uuid == characteristicUuidNavigation) {
             _navigationCharacteristic = characteristic;
             debugPrint("Navigation characteristic found: ${characteristic.uuid}");
+          } else if (characteristic.uuid == characteristicUuidIcon) {
+            _iconCharacteristic = characteristic;
+            debugPrint("Icon characteristic found: ${characteristic.uuid}");
           }
         }
       }
@@ -201,6 +214,45 @@ class _MyHomePageState extends State<MyHomePage> {
       final List<int> bytes = utf8.encode(navigationText);
       await _navigationCharacteristic!.write(bytes);
       debugPrint("Sent navigation: $navigationText");
+    }
+  }
+
+  /// Send icon via BLE to icon characteristic
+  Future<void> _sendIcon(Uint8List iconBytes) async {
+    if (_iconCharacteristic != null) {
+      try {
+        // Get negotiated MTU, fallback to default if not available
+        final mtu = _connectedDevice?.mtuNow ?? 23;
+        final maxChunkSize = mtu - 3; // BLE overhead
+
+        debugPrint("Sending icon: ${iconBytes.length} bytes, MTU: $mtu, chunk size: $maxChunkSize");
+
+        if (iconBytes.length <= maxChunkSize) {
+          // Send in one chunk
+          await _iconCharacteristic!.write(iconBytes, withoutResponse: false);
+          debugPrint("Sent icon in single chunk");
+        } else {
+          // Send in chunks
+          final chunks = <Uint8List>[];
+          for (var i = 0; i < iconBytes.length; i += maxChunkSize) {
+            final end = (i + maxChunkSize < iconBytes.length) ? i + maxChunkSize : iconBytes.length;
+            chunks.add(Uint8List.fromList(iconBytes.sublist(i, end)));
+          }
+
+          debugPrint("Sending icon in ${chunks.length} chunks");
+          for (var i = 0; i < chunks.length; i++) {
+            await _iconCharacteristic!.write(chunks[i], withoutResponse: true);
+            debugPrint("Sent chunk ${i + 1}/${chunks.length} (${chunks[i].length} bytes)");
+            // Small delay between chunks to avoid overwhelming the device
+            if (i < chunks.length - 1) {
+              await Future.delayed(const Duration(milliseconds: 10));
+            }
+          }
+          debugPrint("Icon sent successfully");
+        }
+      } catch (e) {
+        debugPrint("Error sending icon: $e");
+      }
     }
   }
 
@@ -237,6 +289,9 @@ class _MyHomePageState extends State<MyHomePage> {
         setState(() {
           _resizedNavigationIcon = resizedBytes;
         });
+
+        // Send icon via BLE
+        _sendIcon(resizedBytes);
       }
     } catch (e) {
       debugPrint("Error resizing image: $e");
@@ -308,6 +363,8 @@ class _MyHomePageState extends State<MyHomePage> {
         setState(() {
           _connectionStatus = "❌ Disconnected. Reconnecting...";
           _writeCharacteristic = null;
+          _navigationCharacteristic = null;
+          _iconCharacteristic = null;
           _connectedDevice = null;
         });
         // Можно добавить небольшую задержку перед переподключением
